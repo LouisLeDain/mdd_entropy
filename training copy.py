@@ -94,7 +94,7 @@ def train_entropy_minimisation(model, optimizer, loss_function, dataloader, num_
                 outputs = model(input).logits
                 probs = outputs.softmax(dim=-1)
                 loss = loss_function(probs.squeeze(0))  # Squeeze to remove batch dimension
-                print(f"Loss for current input: {loss}")
+                # print(f"Loss for current input: {loss}")
                 batch_loss = batch_loss + loss.item()
 
             batch_loss = batch_loss / len(batch)

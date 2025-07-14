@@ -15,15 +15,11 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam 
 from torch.utils.data import DataLoader, Dataset
-from torch.nn.utils.rnn import pad_sequence
 
-import numpy as np
 import os
 import librosa
-from textgrid import TextGrid
-from tqdm import tqdm
 
-from utils import extract_phoneme_sequence, clean_sequence, greedy_decode, calculate_per, calculate_metrics, evaluate
+from utils import extract_phoneme_sequence, clean_sequence, greedy_decode, evaluate
 from training import train_ctc_model, train_entropy_minimisation, train_pseudo_labeling
 from training import ConditionalEntropyLossLog 
 
@@ -33,10 +29,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define the paths
 
-PATH_CTC_TRAINING_AUDIO = "data/training/ctc/audio"
-PATH_CTC_TRAINING_TEXTGRID = "data/training/ctc/textgrid"
-PATH_UNSUPERVISED_TRAINING_AUDIO = "data/training/unsupervised/audio"
-PATH_TEST = "data/test"
+PATH_CTC_TRAINING_AUDIO = "data_bis/wav"
+PATH_CTC_TRAINING_TEXTGRID = "data_bis/textgrid"
+PATH_UNSUPERVISED_TRAINING_AUDIO = "data_bis/wav"
+PATH_TEST = "data_bis"
 
 # Loading the datasets
 
@@ -115,7 +111,7 @@ train_ctc_model(wav2vec2_baseline_model_base,
                 wav2vec2_baseline_processor_base, 
                 ctc_training_dataloader, 
                 optimizer_ctc_base,
-                num_epochs=5)
+                num_epochs=1)
 
 print("Starting CTC training on the baseline model (960h)...")
 optimizer_ctc_960 = Adam(wav2vec2_baseline_model_960.parameters(), lr=1e-4)
@@ -124,7 +120,7 @@ train_ctc_model(wav2vec2_baseline_model_960,
                 wav2vec2_baseline_processor_960, 
                 ctc_training_dataloader, 
                 optimizer_ctc_960,
-                num_epochs=5)
+                num_epochs=1)
 
 print("CTC training completed on both baseline models.")
 
@@ -154,7 +150,7 @@ train_entropy_minimisation(model=wav2vec2_entropy_base,
                             optimizer=optimizer_entropy_base,
                             loss_function=loss_function_entropy,
                             dataloader=unsupervised_training_dataloader,
-                            num_epochs=5)
+                            num_epochs=1)
 
 print("Starting entropy minimisation on the baseline model (960h)...")
 optimizer_entropy_960 = Adam(wav2vec2_entropy_960.parameters(), lr=1e-4)
@@ -163,7 +159,7 @@ train_entropy_minimisation(model=wav2vec2_entropy_960,
                             optimizer=optimizer_entropy_960,
                             loss_function=loss_function_entropy,
                             dataloader=unsupervised_training_dataloader,
-                            num_epochs=5)
+                            num_epochs=1)
 
 print("Entropy minimisation completed on both baseline models.")
 
@@ -196,7 +192,7 @@ train_pseudo_labeling(model = wav2vec2_mpl_base,
                       optimizer = optimizer_mpl_base, 
                       loss_function = loss_function_mpl, 
                       dataloader = unsupervised_training_dataloader, 
-                      num_epochs=5)
+                      num_epochs=1)
 
 print("Starting momentum pseudo-labeling on the baseline model (960h)...")
 optimizer_mpl_960 = Adam(wav2vec2_mpl_960.parameters(), lr=1e-4)
@@ -207,7 +203,7 @@ train_pseudo_labeling(model = wav2vec2_mpl_960,
                         optimizer = optimizer_mpl_960,
                         loss_function = loss_function_mpl,
                         dataloader = unsupervised_training_dataloader,
-                        num_epochs=5)
+                        num_epochs=1)
 
 print("Momentum pseudo-labeling completed on both baseline models.")
 
