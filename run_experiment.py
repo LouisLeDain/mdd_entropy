@@ -29,7 +29,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define the paths
 
-L2ARCTIC_DIR = "app/data"
+L2ARCTIC_DIR = "/app/data"
 
 test_folders = ['HQTV', 'ASI', 'EBVS', 'ABA']
 
