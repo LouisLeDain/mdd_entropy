@@ -29,46 +29,56 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define the paths
 
-PATH_CTC_TRAINING_AUDIO = "data_bis/wav"
-PATH_CTC_TRAINING_TEXTGRID = "data_bis/textgrid"
-PATH_UNSUPERVISED_TRAINING_AUDIO = "data_bis/wav"
-PATH_TEST = "data_bis"
+L2ARCTIC_DIR = "app/data"
+
+test_folders = ['HQTV', 'ASI', 'EBVS', 'ABA']
+
+list_of_test_files = {name : {'wav' : [os.path.join(name, 'wav', file.replace('.TextGrid', '.wav')) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))],
+                              'textgrid' : [os.path.join(name, 'annotation', file) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))]}  for name in test_folders}
+
+train_folders = [ folder for folder in os.listdir(L2ARCTIC_DIR) if folder not in test_folders]
+list_of_train_ctc_files = {name : {'wav' : [os.path.join(name, 'wav', file.replace('.TextGrid', '.wav')) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))],
+                              'textgrid' : [os.path.join(name, 'annotation', file) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))]}  for name in train_folders}
+
+list_of_unsupervised_files = {name : {'wav' : [os.path.join(name, 'wav', file) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name,'wav'))) if os.path.join(name, 'annotation', file.replace('.wav', '.TextGrid')) not in list_of_train_ctc_files[name]['textgrid']]} for name in train_folders}
+
 
 # Loading the datasets
 
 class AudioDataset(Dataset):
-    def __init__(self, audio_dir, textgrid_dir=None):
+    def __init__(self, data_dir, data, textgrid = False):
         """
         Args:
             audio_dir (string): Directory with all the audio files.
             textgrid_dir (string): Directory with all the textgrid files.
             transform (callable, optional): Optional transform to be applied on a sample.
         """
-        self.audio_dir = audio_dir
-        self.textgrid_dir = textgrid_dir
-        self.audio_files = os.listdir(audio_dir)
-        self.max_audio_length = max([len(librosa.load(os.path.join(audio_dir, f), sr=16000)[0]) for f in self.audio_files if f.endswith('.wav')])
+        self.data_dir = data_dir
+        self.textgrid = textgrid
+        if textgrid:
+            self.list_of_files = {'wav': [], 'textgrid': []}
+        else:
+            self.list_of_files = {'wav': []}
+
+        for folder in data.keys():
+            self.list_of_files['wav'].extend(data[folder]['wav'])
+            if textgrid:
+                self.list_of_files['textgrid'].extend(data[folder]['textgrid'])
+
 
     def __len__(self):
-        return len(self.audio_files)
+        return len(self.list_of_files['wav'])
 
     def __getitem__(self, idx):
-        audio_path = os.path.join(self.audio_dir, self.audio_files[idx])
-        waveform, _ = librosa.load(audio_path, sr=16000)
-        waveform = torch.tensor(waveform, dtype=torch.float32)
-        # Pad the waveform to the maximum length
-        waveform = torch.nn.functional.pad(waveform, (0, self.max_audio_length - len(waveform)))
-    
-
-        # If textgrid_dir is provided, extract the phoneme sequence
-        if not self.textgrid_dir:
+        audio_path = os.path.join(self.data_dir, self.list_of_files['wav'][idx])
+        if self.textgrid:
+            textgrid_path = os.path.join(self.data_dir, self.list_of_files['textgrid'][idx])
+            phoneme_sequence = clean_sequence(extract_phoneme_sequence(textgrid_path))
+            waveform, _ = librosa.load(audio_path, sr=16000, mono=True)
+            return waveform, phoneme_sequence
+        else:
+            waveform, _ = librosa.load(audio_path, sr=16000, mono=True)
             return waveform
-        
-        textgrid_path = os.path.join(self.textgrid_dir, self.audio_files[idx].replace('.wav', '.TextGrid'))
-        phoneme_sequence = clean_sequence(extract_phoneme_sequence(textgrid_path))
-
-        element = waveform, phoneme_sequence
-        return element
     
 def collate_fn(batch):
     # Separate waveforms and phoneme sequences
@@ -77,8 +87,8 @@ def collate_fn(batch):
 
     return waveforms, phoneme_sequences
 
-def create_dataloader(audio_dir, textgrid_dir, batch_size=16, shuffle=True, collate_fn=None):
-    audio_dataset = AudioDataset(audio_dir=audio_dir, textgrid_dir=textgrid_dir)
+def create_dataloader(data_dir, data, batch_size=16, shuffle=True, collate_fn=None):
+    audio_dataset = AudioDataset(data_dir = data_dir,data = data, textgrid=(collate_fn is not None))
     if collate_fn is None:
         dataloader = DataLoader(audio_dataset, batch_size=batch_size, shuffle=shuffle)
     else:
@@ -88,11 +98,26 @@ def create_dataloader(audio_dir, textgrid_dir, batch_size=16, shuffle=True, coll
 
 # Create dataloaders
 
-ctc_training_dataloader = create_dataloader(audio_dir=PATH_CTC_TRAINING_AUDIO, textgrid_dir=PATH_CTC_TRAINING_TEXTGRID, batch_size=16, shuffle=True, collate_fn=collate_fn)
-unsupervised_training_dataloader = create_dataloader(audio_dir=PATH_UNSUPERVISED_TRAINING_AUDIO, textgrid_dir=None, batch_size=16, shuffle=True)
+ctc_training_dataloader = create_dataloader(data_dir=L2ARCTIC_DIR,
+                                            data=list_of_train_ctc_files,
+                                            batch_size=16,
+                                            shuffle=True,
+                                            collate_fn=collate_fn)
+
+unsupervised_training_dataloader = create_dataloader(data_dir=L2ARCTIC_DIR,
+                                                    data=list_of_unsupervised_files,
+                                                    batch_size=16,
+                                                    shuffle=True)
+
+test_dataloader = create_dataloader(data_dir=L2ARCTIC_DIR,
+                                    data=list_of_test_files,
+                                    batch_size=16,
+                                    shuffle=False,
+                                    collate_fn=collate_fn)
 
 print(f"Dataloader for CTC training created with {len(ctc_training_dataloader.dataset)} samples.")
 print(f"Dataloader for unsupervised training created with {len(unsupervised_training_dataloader.dataset)} samples.")
+print(f"Dataloader for testing created with {len(test_dataloader.dataset)} samples.")
 
 # Load the Wav2Vec2 models and processors
 
@@ -220,20 +245,20 @@ wav2vec2_mpl_processor_960.save_pretrained("models/wav2vec2_mpl_960")
 print("Evaluating the entropy minimised model (base)...")
 evaluate(model=wav2vec2_entropy_base,
         processor=wav2vec2_entropy_processor_base,
-        test_dataset=PATH_TEST)
+        test_dataloader=test_dataloader)
 
 print("Evaluating the entropy minimised model (960h)...")
 evaluate(model=wav2vec2_entropy_960,
         processor=wav2vec2_entropy_processor_960,
-        test_dataset=PATH_TEST)
+        test_dataloader=test_dataloader)
 
 print("Evaluating the momentum pseudo-labeled model (base)...")
 evaluate(model=wav2vec2_mpl_base,
         processor=wav2vec2_mpl_processor_base,
-        test_dataset=PATH_TEST)
+        test_dataloader=test_dataloader)
 
 print("Evaluating the momentum pseudo-labeled model (960h)...")
 evaluate(model=wav2vec2_mpl_960,
         processor=wav2vec2_mpl_processor_960,
-        test_dataset=PATH_TEST)
+        test_dataloader=test_dataloader)
 

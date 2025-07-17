@@ -1,6 +1,4 @@
 import torch
-import os
-import librosa
 from textgrid import TextGrid
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -173,7 +171,7 @@ def calculate_metrics(reference, hypothesis):
 
     return precision, recall
 
-def evaluate(model, processor, test_dataset):
+def evaluate(model, processor, test_dataloader):
     """
     Evaluate the model through the proper metrics : 
     - Phoneme Error Rate (PER)
@@ -185,20 +183,16 @@ def evaluate(model, processor, test_dataset):
         total_precision = 0
         total_recall = 0
         
-        for wav_file in os.listdir(os.path.join(test_dataset, 'wav')):
-            if wav_file.endswith('.wav'):
+        for idx in range(len(test_dataloader.dataset)):
+            wav_file, target_text = test_dataloader.dataset[idx]
+            if wav_file is not None:
                 # Load the audio file
-                sound, sr = librosa.load(os.path.join(test_dataset, 'wav', wav_file), sr=16000)
-                input_values = processor(sound, sampling_rate=sr, return_tensors="pt").input_values.to(device)
+                input_values = processor(wav_file, sampling_rate=16000, return_tensors="pt").input_values.to(device)
 
                 # Get model predictions
                 outputs = model(input_values).logits
                 predicted_ids = torch.argmax(outputs, dim=-1)
                 transcription = clean_sequence(processor.batch_decode(predicted_ids)[0])
-
-                # Load the corresponding TextGrid file
-                textgrid_file = wav_file.replace('.wav', '.TextGrid')
-                target_text = clean_sequence(extract_phoneme_sequence(os.path.join(test_dataset, 'textgrid', textgrid_file)))
 
                 per = calculate_per(target_text.split(' '), transcription.split(' '))
                 precision, recall = calculate_metrics(target_text, transcription)
@@ -208,7 +202,7 @@ def evaluate(model, processor, test_dataset):
                 total_recall += recall
 
         # Calculate average metrics
-        num_files = len(os.listdir(os.path.join(test_dataset, 'wav')))
+        num_files = len(test_dataloader.dataset)
         avg_per = total_per / num_files if num_files > 0 else 0
         avg_precision = total_precision / num_files if num_files > 0 else 0
         avg_recall = total_recall / num_files if num_files > 0 else 0

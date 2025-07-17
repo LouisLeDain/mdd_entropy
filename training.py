@@ -56,6 +56,7 @@ class ConditionalEntropyLossLog(torch.nn.Module):
 def train_ctc_model(model, processor, dataloader, optimizer, num_epochs=10):
     loss_function = nn.CTCLoss().to(device)
     for epoch in range(num_epochs):
+        model.train()
         total_loss = 0.0
         for batch in dataloader:
             waveforms, phoneme_sequences = batch
@@ -85,6 +86,7 @@ def train_ctc_model(model, processor, dataloader, optimizer, num_epochs=10):
 
 def train_entropy_minimisation(model, optimizer, loss_function, dataloader, num_epochs=10):
     for epoch in range(num_epochs):
+        model.train()
         total_loss = 0.0
         for batch in dataloader:
             batch_loss = torch.tensor(0.0, dtype = torch.float64, requires_grad=True)
@@ -109,6 +111,8 @@ def train_entropy_minimisation(model, optimizer, loss_function, dataloader, num_
 
 def train_pseudo_labeling(model, teacher_model, processor, optimizer, loss_function, dataloader, num_epochs=10, alpha=0.9):
     for epoch in range(num_epochs):
+        model.train()
+        teacher_model.eval()  # Ensure the teacher model is in evaluation mode
         total_loss = 0.0
         for batch in dataloader:
             batch_loss = torch.tensor(0.0, requires_grad=True)
