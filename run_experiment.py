@@ -28,6 +28,7 @@ from training import ConditionalEntropyLossLog
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define the paths
+print("Collecting files...")
 
 L2ARCTIC_DIR = "/app/data"
 
@@ -42,6 +43,7 @@ list_of_train_ctc_files = {name : {'wav' : [os.path.join(name, 'wav', file.repla
 
 list_of_unsupervised_files = {name : {'wav' : [os.path.join(name, 'wav', file) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name,'wav'))) if os.path.join(name, 'annotation', file.replace('.wav', '.TextGrid')) not in list_of_train_ctc_files[name]['textgrid']]} for name in train_folders}
 
+print("Collecting files done.")
 
 # Loading the datasets
 
@@ -104,6 +106,7 @@ def create_dataloader(data_dir, data, batch_size=16, shuffle=True, collate_fn=No
     return dataloader
 
 # Create dataloaders
+print("Creating dataloaders...")
 
 ctc_training_dataloader = create_dataloader(data_dir=L2ARCTIC_DIR,
                                             data=list_of_train_ctc_files,
