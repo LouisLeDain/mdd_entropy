@@ -36,7 +36,7 @@ test_folders = ['HQTV', 'ASI', 'EBVS', 'ABA']
 list_of_test_files = {name : {'wav' : [os.path.join(name, 'wav', file.replace('.TextGrid', '.wav')) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))],
                               'textgrid' : [os.path.join(name, 'annotation', file) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))]}  for name in test_folders}
 
-train_folders = [ folder for folder in os.listdir(L2ARCTIC_DIR) if folder not in test_folders]
+train_folders = ['HKK', 'MBMPS', 'PNV', 'SVBI', 'TNI', 'YDCK', 'ERMS', 'NCC', 'RRBI', 'THV', 'TXHC', 'YKWK', 'BWC', 'HJK', 'LXC', 'NJS', 'SKA', 'TLV', 'YBAA', 'ZHAA']
 list_of_train_ctc_files = {name : {'wav' : [os.path.join(name, 'wav', file.replace('.TextGrid', '.wav')) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))],
                               'textgrid' : [os.path.join(name, 'annotation', file) for file in sorted(os.listdir(os.path.join(L2ARCTIC_DIR, name, "annotation")))]}  for name in train_folders}
 
