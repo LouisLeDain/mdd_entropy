@@ -75,9 +75,11 @@ class AudioDataset(Dataset):
             textgrid_path = os.path.join(self.data_dir, self.list_of_files['textgrid'][idx])
             phoneme_sequence = clean_sequence(extract_phoneme_sequence(textgrid_path))
             waveform, _ = librosa.load(audio_path, sr=16000, mono=True)
+            waveform = torch.from_numpy(waveform)
             return waveform, phoneme_sequence
         else:
             waveform, _ = librosa.load(audio_path, sr=16000, mono=True)
+            waveform = torch.from_numpy(waveform)
             return waveform
     
 def collate_fn(batch):
