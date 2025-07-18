@@ -26,6 +26,7 @@ from training import ConditionalEntropyLossLog
 # Define the device
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Device is : {device}")
 
 # Define the paths
 print("Collecting files...")
