@@ -65,6 +65,7 @@ class AudioDataset(Dataset):
             if textgrid:
                 self.list_of_files['textgrid'].extend(data[folder]['textgrid'])
 
+        self.max_length = max([len(librosa.load(os.path.join(self.data_dir, file), sr=16000, mono=True)[0]) for file in self.list_of_files['wav']])
 
     def __len__(self):
         return len(self.list_of_files['wav'])
@@ -76,10 +77,14 @@ class AudioDataset(Dataset):
             phoneme_sequence = clean_sequence(extract_phoneme_sequence(textgrid_path))
             waveform, _ = librosa.load(audio_path, sr=16000, mono=True)
             waveform = torch.from_numpy(waveform)
+            # Pad the waveform to the maximum length
+            waveform = torch.nn.functional.pad(waveform, (0, self.max_length - len(waveform)))
             return waveform, phoneme_sequence
         else:
             waveform, _ = librosa.load(audio_path, sr=16000, mono=True)
             waveform = torch.from_numpy(waveform)
+            # Pad the waveform to the maximum length
+            waveform = torch.nn.functional.pad(waveform, (0, self.max_length - len(waveform)))
             return waveform
     
 def collate_fn(batch):
