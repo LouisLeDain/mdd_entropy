@@ -4,18 +4,22 @@ from textgrid import TextGrid
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def extract_phoneme_sequence(textgrid_file_path):
-    # Read the TextGrid file
-    textgrid = TextGrid.fromFile(textgrid_file_path)
+    try: 
+        # Read the TextGrid file
+        textgrid = TextGrid.fromFile(textgrid_file_path)
 
-    # Assuming the phoneme tier is named 'phones'
-    phoneme_tier = textgrid.getFirst("phones")
+        # Assuming the phoneme tier is named 'phones'
+        phoneme_tier = textgrid.getFirst("phones")
 
-    if phoneme_tier is None:
-        raise ValueError("No phoneme tier found in the TextGrid file.")
+        if phoneme_tier is None:
+            raise ValueError("No phoneme tier found in the TextGrid file.")
 
-    # Extract phoneme sequence
-    phoneme_sequence = [interval.mark for interval in phoneme_tier.intervals if interval.mark]
-    return ' '.join(phoneme_sequence)
+        # Extract phoneme sequence
+        phoneme_sequence = [interval.mark for interval in phoneme_tier.intervals if interval.mark]
+        return ' '.join(phoneme_sequence)
+    except Exception as e:
+        print(f"Error extracting phoneme sequence from {textgrid_file_path}: {e}")
+        return None
 
 def clean_sequence(sequence):
     """
