@@ -135,8 +135,8 @@ print(f"Dataloader for testing created with {len(test_dataloader.dataset)} sampl
 wav2vec2_baseline_model_base = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base").to(device)
 wav2vec2_baseline_processor_base = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base")
 
-wav2vec2_baseline_model_960 = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h").to(device)
-wav2vec2_baseline_processor_960 = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
+# wav2vec2_baseline_model_960 = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h").to(device)
+# wav2vec2_baseline_processor_960 = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
 
 # Perform CTC training on the baseline model
 
@@ -149,32 +149,32 @@ train_ctc_model(wav2vec2_baseline_model_base,
                 optimizer_ctc_base,
                 num_epochs=1)
 
-print("Starting CTC training on the baseline model (960h)...")
-optimizer_ctc_960 = Adam(wav2vec2_baseline_model_960.parameters(), lr=1e-4)
+# print("Starting CTC training on the baseline model (960h)...")
+# optimizer_ctc_960 = Adam(wav2vec2_baseline_model_960.parameters(), lr=1e-4)
 
-train_ctc_model(wav2vec2_baseline_model_960, 
-                wav2vec2_baseline_processor_960, 
-                ctc_training_dataloader, 
-                optimizer_ctc_960,
-                num_epochs=1)
+#train_ctc_model(wav2vec2_baseline_model_960, 
+#                wav2vec2_baseline_processor_960, 
+#                ctc_training_dataloader, 
+#                optimizer_ctc_960,
+#                num_epochs=1)
 
-print("CTC training completed on both baseline models.")
+print("CTC training completed.")
 
 # Save the CTC trained models
 
 wav2vec2_baseline_model_base.save_pretrained("models/wav2vec2_baseline_base_ctc")
 wav2vec2_baseline_processor_base.save_pretrained("models/wav2vec2_baseline_base_ctc")
 
-wav2vec2_baseline_model_960.save_pretrained("models/wav2vec2_baseline_960_ctc")
-wav2vec2_baseline_processor_960.save_pretrained("models/wav2vec2_baseline_960_ctc")
+# wav2vec2_baseline_model_960.save_pretrained("models/wav2vec2_baseline_960_ctc")
+# wav2vec2_baseline_processor_960.save_pretrained("models/wav2vec2_baseline_960_ctc")
 
 # Perform entropy minimisation
 
 wav2vec2_entropy_base = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_base_ctc").to(device)
 wav2vec2_entropy_processor_base = Wav2Vec2Processor.from_pretrained("models/wav2vec2_baseline_base_ctc")
 
-wav2vec2_entropy_960 = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_960_ctc").to(device)
-wav2vec2_entropy_processor_960 = Wav2Vec2Processor.from_pretrained("models/wav2vec2_baseline_960_ctc")
+# wav2vec2_entropy_960 = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_960_ctc").to(device)
+# wav2vec2_entropy_processor_960 = Wav2Vec2Processor.from_pretrained("models/wav2vec2_baseline_960_ctc")
 
 loss_function_entropy = ConditionalEntropyLossLog(n_best_function=greedy_decode)
 
@@ -188,24 +188,24 @@ train_entropy_minimisation(model=wav2vec2_entropy_base,
                             dataloader=unsupervised_training_dataloader,
                             num_epochs=1)
 
-print("Starting entropy minimisation on the baseline model (960h)...")
-optimizer_entropy_960 = Adam(wav2vec2_entropy_960.parameters(), lr=1e-4)
+# print("Starting entropy minimisation on the baseline model (960h)...")
+# optimizer_entropy_960 = Adam(wav2vec2_entropy_960.parameters(), lr=1e-4)
 
-train_entropy_minimisation(model=wav2vec2_entropy_960,
-                            optimizer=optimizer_entropy_960,
-                            loss_function=loss_function_entropy,
-                            dataloader=unsupervised_training_dataloader,
-                            num_epochs=1)
+# train_entropy_minimisation(model=wav2vec2_entropy_960,
+#                            optimizer=optimizer_entropy_960,
+#                            loss_function=loss_function_entropy,
+#                            dataloader=unsupervised_training_dataloader,
+#                            num_epochs=1)
 
-print("Entropy minimisation completed on both baseline models.")
+print("Entropy minimisation completed.")
 
 # Save the entropy minimised models
 
 wav2vec2_entropy_base.save_pretrained("models/wav2vec2_entropy_base")
 wav2vec2_entropy_processor_base.save_pretrained("models/wav2vec2_entropy_base")
 
-wav2vec2_entropy_960.save_pretrained("models/wav2vec2_entropy_960")
-wav2vec2_entropy_processor_960.save_pretrained("models/wav2vec2_entropy_960")
+# wav2vec2_entropy_960.save_pretrained("models/wav2vec2_entropy_960")
+# wav2vec2_entropy_processor_960.save_pretrained("models/wav2vec2_entropy_960")
 
 # Perform momentum pseudo-labeling
 
@@ -213,9 +213,9 @@ wav2vec2_mpl_base = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_bas
 teacher_wav2vec2_mpl_base = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_base_ctc").to(device)
 wav2vec2_mpl_processor_base = Wav2Vec2Processor.from_pretrained("models/wav2vec2_baseline_base_ctc")
 
-wav2vec2_mpl_960 = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_960_ctc").to(device)
-teacher_wav2vec2_mpl_960 = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_960_ctc").to(device)
-wav2vec2_mpl_processor_960 = Wav2Vec2Processor.from_pretrained("models/wav2vec2_baseline_960_ctc")
+# wav2vec2_mpl_960 = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_960_ctc").to(device)
+# teacher_wav2vec2_mpl_960 = Wav2Vec2ForCTC.from_pretrained("models/wav2vec2_baseline_960_ctc").to(device)
+# wav2vec2_mpl_processor_960 = Wav2Vec2Processor.from_pretrained("models/wav2vec2_baseline_960_ctc")
 
 loss_function_mpl = nn.CTCLoss()
 
@@ -230,26 +230,26 @@ train_pseudo_labeling(model = wav2vec2_mpl_base,
                       dataloader = unsupervised_training_dataloader, 
                       num_epochs=1)
 
-print("Starting momentum pseudo-labeling on the baseline model (960h)...")
-optimizer_mpl_960 = Adam(wav2vec2_mpl_960.parameters(), lr=1e-4)
+# print("Starting momentum pseudo-labeling on the baseline model (960h)...")
+# optimizer_mpl_960 = Adam(wav2vec2_mpl_960.parameters(), lr=1e-4)
 
-train_pseudo_labeling(model = wav2vec2_mpl_960,
-                        teacher_model = teacher_wav2vec2_mpl_960,
-                        processor = wav2vec2_mpl_processor_960,
-                        optimizer = optimizer_mpl_960,
-                        loss_function = loss_function_mpl,
-                        dataloader = unsupervised_training_dataloader,
-                        num_epochs=1)
+# train_pseudo_labeling(model = wav2vec2_mpl_960,
+#                        teacher_model = teacher_wav2vec2_mpl_960,
+#                        processor = wav2vec2_mpl_processor_960,
+#                        optimizer = optimizer_mpl_960,
+#                        loss_function = loss_function_mpl,
+#                        dataloader = unsupervised_training_dataloader,
+#                        num_epochs=1)
 
-print("Momentum pseudo-labeling completed on both baseline models.")
+print("Momentum pseudo-labeling completed.")
 
 # Save the momentum pseudo-labeled models
 
 wav2vec2_mpl_base.save_pretrained("models/wav2vec2_mpl_base")
 wav2vec2_mpl_processor_base.save_pretrained("models/wav2vec2_mpl_base")
 
-wav2vec2_mpl_960.save_pretrained("models/wav2vec2_mpl_960")
-wav2vec2_mpl_processor_960.save_pretrained("models/wav2vec2_mpl_960")
+# wav2vec2_mpl_960.save_pretrained("models/wav2vec2_mpl_960")
+# wav2vec2_mpl_processor_960.save_pretrained("models/wav2vec2_mpl_960")
 
 # Evaluate the models
 
@@ -258,18 +258,18 @@ evaluate(model=wav2vec2_entropy_base,
         processor=wav2vec2_entropy_processor_base,
         test_dataloader=test_dataloader)
 
-print("Evaluating the entropy minimised model (960h)...")
-evaluate(model=wav2vec2_entropy_960,
-        processor=wav2vec2_entropy_processor_960,
-        test_dataloader=test_dataloader)
+# print("Evaluating the entropy minimised model (960h)...")
+# evaluate(model=wav2vec2_entropy_960,
+#        processor=wav2vec2_entropy_processor_960,
+#        test_dataloader=test_dataloader)
 
 print("Evaluating the momentum pseudo-labeled model (base)...")
 evaluate(model=wav2vec2_mpl_base,
         processor=wav2vec2_mpl_processor_base,
         test_dataloader=test_dataloader)
 
-print("Evaluating the momentum pseudo-labeled model (960h)...")
-evaluate(model=wav2vec2_mpl_960,
-        processor=wav2vec2_mpl_processor_960,
-        test_dataloader=test_dataloader)
+# print("Evaluating the momentum pseudo-labeled model (960h)...")
+# evaluate(model=wav2vec2_mpl_960,
+#        processor=wav2vec2_mpl_processor_960,
+#        test_dataloader=test_dataloader)
 
