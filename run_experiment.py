@@ -186,6 +186,7 @@ optimizer_entropy_base = Adam(wav2vec2_entropy_base.parameters(), lr=3e-4)
 
 
 train_entropy_minimisation(model=wav2vec2_entropy_base,
+                            processor=wav2vec2_entropy_processor_base,
                             optimizer=optimizer_entropy_base,
                             loss_function=loss_function_entropy,
                             dataloader=unsupervised_training_dataloader,

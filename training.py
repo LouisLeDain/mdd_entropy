@@ -64,6 +64,7 @@ def train_ctc_model(model, processor, dataloader, optimizer, num_epochs=10):
             optimizer.zero_grad()
             for i in range(len(waveforms)):
                 input = waveforms[i].unsqueeze(0).to(device)  # Add batch dimension and move to device
+                input = processor(input, sampling_rate=16000, return_tensors="pt", padding=True).input_values.to(device)  # Process the input
                 outputs = model(input).logits # shape (batch_size, sequence_length, num_classes)
                 log_probs = outputs.log_softmax(dim=-1).permute(1, 0, 2)  # shape (sequence_length, batch_size, num_classes)
 
@@ -84,7 +85,7 @@ def train_ctc_model(model, processor, dataloader, optimizer, num_epochs=10):
         avg_loss = total_loss / len(dataloader)
         print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {avg_loss:.4f}")
 
-def train_entropy_minimisation(model, optimizer, loss_function, dataloader, num_epochs=10):
+def train_entropy_minimisation(model, processor, optimizer, loss_function, dataloader, num_epochs=10):
     for epoch in range(num_epochs):
         model.train()
         total_loss = 0.0
@@ -93,6 +94,7 @@ def train_entropy_minimisation(model, optimizer, loss_function, dataloader, num_
             optimizer.zero_grad()
             for _, input in enumerate(batch):
                 input = input.unsqueeze(0).to(device)
+                input = processor(input, sampling_rate=16000, return_tensors="pt", padding=True).input_values.to(device)  # Process the input
                 outputs = model(input).logits
                 probs = outputs.softmax(dim=-1)
                 loss = loss_function(probs.squeeze(0))  # Squeeze to remove batch dimension
@@ -119,6 +121,7 @@ def train_pseudo_labeling(model, teacher_model, processor, optimizer, loss_funct
             optimizer.zero_grad()
             for _, input in enumerate(batch):
                 input = input.unsqueeze(0).to(device)
+                input = processor(input, sampling_rate=16000, return_tensors="pt", padding=True).input_values.to(device)  # Process the input
                 outputs = model(input).logits # shape (batch_size, sequence_length, num_classes)
                 log_probs = outputs.log_softmax(dim=-1).permute(1, 0, 2)  # shape (sequence_length, batch_size, num_classes)
 
