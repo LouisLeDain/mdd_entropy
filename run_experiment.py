@@ -144,13 +144,13 @@ wav2vec2_baseline_processor_base = Wav2Vec2Processor.from_pretrained("facebook/w
 # Perform CTC training on the baseline model
 
 print("Starting CTC training on the baseline model (base)...")
-optimizer_ctc_base = Adam(wav2vec2_baseline_model_base.parameters(), lr=1e-4)
+optimizer_ctc_base = Adam(wav2vec2_baseline_model_base.parameters(), lr=3e-4)
 
 train_ctc_model(wav2vec2_baseline_model_base, 
                 wav2vec2_baseline_processor_base, 
                 ctc_training_dataloader, 
                 optimizer_ctc_base,
-                num_epochs=5)
+                num_epochs=50)
 
 # print("Starting CTC training on the baseline model (960h)...")
 # optimizer_ctc_960 = Adam(wav2vec2_baseline_model_960.parameters(), lr=1e-4)
@@ -182,14 +182,14 @@ wav2vec2_entropy_processor_base = Wav2Vec2Processor.from_pretrained("models/wav2
 loss_function_entropy = ConditionalEntropyLossLog(n_best_function=greedy_decode)
 
 print("Starting entropy minimisation on the baseline model (base)...")
-optimizer_entropy_base = Adam(wav2vec2_entropy_base.parameters(), lr=1e-4)
+optimizer_entropy_base = Adam(wav2vec2_entropy_base.parameters(), lr=3e-4)
 
 
 train_entropy_minimisation(model=wav2vec2_entropy_base,
                             optimizer=optimizer_entropy_base,
                             loss_function=loss_function_entropy,
                             dataloader=unsupervised_training_dataloader,
-                            num_epochs=5)
+                            num_epochs=50)
 
 # print("Starting entropy minimisation on the baseline model (960h)...")
 # optimizer_entropy_960 = Adam(wav2vec2_entropy_960.parameters(), lr=1e-4)
@@ -223,7 +223,7 @@ wav2vec2_mpl_processor_base = Wav2Vec2Processor.from_pretrained("models/wav2vec2
 loss_function_mpl = nn.CTCLoss()
 
 print("Starting momentum pseudo-labeling on the baseline model (base)...")
-optimizer_mpl_base = Adam(wav2vec2_mpl_base.parameters(), lr=1e-4)
+optimizer_mpl_base = Adam(wav2vec2_mpl_base.parameters(), lr=3e-4)
 
 train_pseudo_labeling(model = wav2vec2_mpl_base,
                       teacher_model = teacher_wav2vec2_mpl_base, 
@@ -231,7 +231,7 @@ train_pseudo_labeling(model = wav2vec2_mpl_base,
                       optimizer = optimizer_mpl_base, 
                       loss_function = loss_function_mpl, 
                       dataloader = unsupervised_training_dataloader, 
-                      num_epochs=5)
+                      num_epochs=50)
 
 # print("Starting momentum pseudo-labeling on the baseline model (960h)...")
 # optimizer_mpl_960 = Adam(wav2vec2_mpl_960.parameters(), lr=1e-4)
@@ -255,6 +255,11 @@ wav2vec2_mpl_processor_base.save_pretrained("models/wav2vec2_mpl_base")
 # wav2vec2_mpl_processor_960.save_pretrained("models/wav2vec2_mpl_960")
 
 # Evaluate the models
+
+print("Evaluating the baseline model after CTC (base)...")
+evaluate(model=wav2vec2_baseline_model_base,
+        processor=wav2vec2_baseline_processor_base,
+        test_dataloader=test_dataloader)
 
 print("Evaluating the entropy minimised model (base)...")
 evaluate(model=wav2vec2_entropy_base,
